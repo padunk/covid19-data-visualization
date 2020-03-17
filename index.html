@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>covid19-data-visualization</title>
+   <link rel="stylesheet" href="./public/style.css">
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.0/d3.min.js"></script>
+   <script src="./src/index.js" defer></script>
+</head>
+
+<body>
+   <header>
+      <h1 class='title'>COVID-19 in Diagram</h1>
+   </header>
+   <main>
+      <section>
+         <div class="main-wrapper">
+            <input type="radio" id="radio-bar" name="choose" checked>
+            <label for="radio-bar">By Day</label>
+            <input type="radio" id="radio-donut" name="choose">
+            <label for="radio-donut">By Country</label>
+
+            <div class="by-day">
+               <h2>Daily COVID-19 Bar Chart</h2>
+               <div id="bar">
+                  <div id="tooltip"></div>
+               </div>
+            </div>
+
+            <div class="by-country">
+               <div class="select-wrapper">
+                  <label for="countries">Select Country:</label>
+                  <select name="countries" id="countries" class="countries"></select>
+               </div>
+               <div id="donut"></div>
+            </div>
+         </div>
+      </section>
+   </main>
+   <article>
+      <h2>Some source about COVID-19:</h2>
+      <ol>
+         <li><a href="https://twitter.com/fmuchtar_/status/1239499987785904128" target="_blank"
+               rel="noopener noreferrer">Indonesian Condition</a> in Bahasa</li>
+         <li><a href="https://corona-azure.now.sh" target="_blank" rel="noopener noreferrer">Why social distancing</a>
+            by <a href="https://twitter.com/ryanflorence" target="_blank" rel="noopener noreferrer">Ryan Florence</a>
+         </li>
+         <li><a href="https://covid19dashboards.com" target="_blank" rel="noopener noreferrer">Covid19 Dashboard</a>
+         </li>
+      </ol>
+   </article>
+   <footer>
+      <p>Data from this beautiful API <a href="https://covid19.mathdro.id/api" target="_blank"
+            rel="noopener noreferrer">covid19.mathdro.id</a> by <a href="https://twitter.com/mathdroid" target="_blank"
+            rel="noopener noreferrer">MM</a></p>
+      <p>Messy code at <a href="https://github.com/padunk/covid19-data-visualization">Github</a>
+      </p>
+      <a href="https://twitter.com/anakagungcorp"><img src="./assets/twitterIcon.svg" alt="twitter" width="50"></a>
+   </footer>
+</body>
+
+</html>
