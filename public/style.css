@@ -71,8 +71,7 @@ label {
     margin-top: 1rem;
     margin-bottom: 2rem;
     font-size: 1.5rem;
-    display: grid;
-    place-items: center;
+    text-align: center;
 }
 
 .by-day,
@@ -82,9 +81,8 @@ label {
     display: none;
 }
 
-input[type="radio"],
 label[for^="radio"] {
-    display: inline-block;
+    margin-right: 2rem;
 }
 
 #radio-bar:checked ~ .by-day {
@@ -95,7 +93,7 @@ label[for^="radio"] {
     display: block;
 }
 
-#radio-indonesia:checked ~ .indonesia {
+#radio-nasional:checked ~ .indonesia {
     display: block;
 }
 
