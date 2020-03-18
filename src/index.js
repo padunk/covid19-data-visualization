@@ -5,6 +5,7 @@ let baseURL = "https://covid19.mathdro.id/api/";
 let barElement = document.getElementById("bar");
 let countriesElement = document.querySelector(".countries");
 let donutElement = document.getElementById("donut");
+let idnElement = document.getElementById('indonesia');
 
 let monthsTable = {
     "01": "January",
@@ -428,6 +429,128 @@ function changeDataToDonutData(dateString, data) {
         });
     });
     return obj;
+}
+
+async function createCountryDonut(countryISO3) {
+    // remove children first if any
+    if (donutElement.childElementCount) {
+        donutElement.removeChild(donutElement.firstChild);
+    }
+
+    // get the data
+    let rawData;
+    if (localStorage.getItem(countryISO3)) {
+        rawData = JSON.parse(localStorage.getItem(countryISO3));
+    } else {
+        rawData = await fetchData(baseURL, `countries/${countryISO3}`);
+        localStorage.setItem(countryISO3, JSON.stringify(rawData));
+        console.log("sukses", countryISO3);
+    }
+
+    if (rawData.error) {
+        let informError =
+            "<p class='no-data'>No data for the selected country.</p>";
+        donutElement.insertAdjacentHTML("beforeend", informError);
+        return;
+    }
+
+    let data = Object.keys(rawData)
+        .slice(0, -1)
+        .map(d => {
+            return {
+                name: d,
+                value: rawData[d].value,
+            };
+        });
+    data.columns = ["name", "value"];
+    // console.log(rawData);
+
+    // DONUT
+    let width = window.innerWidth;
+    let height = Math.min(width, 500);
+    let radius = Math.min(width, height) / 2;
+    let donut = d3
+        .pie()
+        .padAngle(0.005)
+        .sort(null)
+        .value(d => d.value);
+
+    let arc = d3
+        .arc()
+        .innerRadius(radius * 0.67)
+        .outerRadius(radius - 1);
+
+    let color = d3
+        .scaleOrdinal()
+        .domain(data.map(d => d.name))
+        .range(
+            d3
+                .quantize(
+                    t => d3.interpolateSpectral(t * 0.8 + 0.1),
+                    data.length
+                )
+                .reverse()
+        );
+
+    let svg = d3
+        .select(donutElement)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    svg.selectAll("path")
+        .data(donut(data))
+        .join("path")
+        .attr("fill", d => color(d.data.name))
+        .attr("d", arc)
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(2000)
+        .attrTween("d", pieTween);
+
+    // DONUT TEXT
+    svg.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
+        .attr("text-anchor", "middle")
+        .selectAll("text")
+        .data(donut(data))
+        .join("text")
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .call(text =>
+            text
+                .append("tspan")
+                .attr("y", (d, i) => `-0.4em`)
+                .attr("font-weight", "bold")
+                .text(d => d.data.name)
+        )
+        .call(text =>
+            text
+                // .filter(d => d.endAngle - d.startAngle > 0.25)
+                .append("tspan")
+                .attr("x", 0)
+                .attr("y", "0.7em")
+                .attr("fill-opacity", 0.7)
+                .text(d => numberFormat(d.data.value))
+        );
+
+    svg.append("g")
+        .append("text")
+        .text(`Last update: ${new Date(rawData.lastUpdate).toDateString()}`)
+        .attr("dx", "-80")
+        .attr("fill", "white")
+        .attr("font-size", 14);
+
+    // ANIMATION
+    function pieTween(b) {
+        b.innerRadius = 0;
+        let i = d3.interpolate({ startAngle: 0, endAngle: 0 }, b);
+        return function(t) {
+            return arc(i(t));
+        };
+    }
 }
 
 async function createCountryDonut(countryISO3) {

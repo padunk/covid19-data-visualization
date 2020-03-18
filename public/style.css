@@ -76,9 +76,15 @@ label {
 }
 
 .by-day,
-.by-country {
+.by-country,
+.indonesia {
     margin-top: 5rem;
     display: none;
+}
+
+input[type="radio"],
+label[for^="radio"] {
+    display: inline-block;
 }
 
 #radio-bar:checked ~ .by-day {
@@ -86,6 +92,10 @@ label {
 }
 
 #radio-donut:checked ~ .by-country {
+    display: block;
+}
+
+#radio-indonesia:checked ~ .indonesia {
     display: block;
 }
 
