@@ -439,13 +439,13 @@ async function createCountryDonut(countryISO3) {
 
     // get the data
     let rawData;
-    if (localStorage.getItem(countryISO3)) {
+    // if (localStorage.getItem(countryISO3)) {
         rawData = JSON.parse(localStorage.getItem(countryISO3));
-    } else {
-        rawData = await fetchData(baseURL, `countries/${countryISO3}`);
-        localStorage.setItem(countryISO3, JSON.stringify(rawData));
-        console.log("sukses", countryISO3);
-    }
+    // } else {
+    //     rawData = await fetchData(baseURL, `countries/${countryISO3}`);
+    //     localStorage.setItem(countryISO3, JSON.stringify(rawData));
+    //     console.log("sukses", countryISO3);
+    // }
 
     if (rawData.error) {
         let informError =
