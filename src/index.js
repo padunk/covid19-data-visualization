@@ -472,15 +472,16 @@ async function createCountryDonut(countryISO3) {
 async function createIndonesiaData() {
     // get the data
     let rawData = await fetch('https://jakarta.mathdro.id/api').then(d => d.json());
-    let data = Object.keys(rawData.nasional)
+    let data = Object.keys(rawData.data.nasional)
+        .slice(0, -2)
         .map(d => {
             return {
                 name: d,
-                value: rawData.nasional[d],
+                value: rawData.data.nasional[d],
             };
         });
     data.columns = ["name", "value"];
-    // console.log(data);
+    console.log(rawData);
 
     // DONUT
     createDonut(data, idnElement, new Date());
