@@ -1,5 +1,4 @@
 "use strict";
-console.clear();
 
 let baseURL = "https://covid19.mathdro.id/api/";
 let barElement = document.getElementById("bar");
@@ -27,9 +26,9 @@ async function fetchData(base, category) {
 }
 
 async function createSelection() {
-    let { countries, iso3 } = await fetchData(baseURL, "countries");
-    Object.entries(countries).map(([country, iso2]) => {
-        let option = `<option value=${iso3[iso2]}>${country}</option>`;
+    let {countries} = await fetchData(baseURL, "countries");
+    countries.map(({name, iso3}) => {
+        let option = `<option value=${iso3}>${name}</option>`;
         countriesElement.insertAdjacentHTML("beforeend", option);
     });
 }
@@ -43,7 +42,7 @@ async function createDailyBarChart() {
     // GET DATA
     let data = await fetchData(baseURL, "daily");
     let barData = data.map(d => ({
-        name: d.reportDateString,
+        name: d.reportDate,
         china: d.mainlandChina,
         other: d.otherLocations,
         total: d.totalConfirmed,
@@ -53,12 +52,8 @@ async function createDailyBarChart() {
         .stack()
         .keys(keys)(barData)
         .map(d => (d.forEach(v => (v.key = d.key)), d));
-    let date = data.map(d => new Date(d.reportDateString));
+    let date = data.map(d => new Date(d.reportDate));
     let total = data.map(d => d.totalConfirmed);
-    let recovered = data.map(d => ({
-        date: new Date(d.reportDateString),
-        value: d.totalRecovered,
-    }));
 
     // BAR
     let svg = d3
@@ -93,14 +88,14 @@ async function createDailyBarChart() {
 
     // COLOR
     let colorScheme = [
-        "#e41a1c",
+        "#ffff33",
         "#377eb8",
         "#4daf4a",
         "#984ea3",
         "#ff7f00",
-        "#ffff33",
         "#a65628",
         "#f781bf",
+        "#e41a1c",
         "#999999",
     ];
     let color = d3
@@ -125,11 +120,7 @@ async function createDailyBarChart() {
         .attr("width", d => width / series[0].length - 3)
         .on("mouseover", (d, i) => {
             // TOOLTIP
-            let totalRecovered = data.filter(
-                r => r.reportDateString === d.data.name
-            )[0].totalRecovered;
             let total = d.data.china + d.data.other;
-            let percentRecovered = ((totalRecovered / total) * 100).toFixed(2);
             tooltip.classList.add("show");
             tooltip.innerHTML = `
       <p>${monthsTable[d.data.name.slice(5, 7)]} ${d.data.name.slice(
@@ -138,9 +129,6 @@ async function createDailyBarChart() {
       <p>Mainland China: ${numberFormat(d.data.china)} cases</p>
       <p>Rest of the world: ${numberFormat(d.data.other)} cases</p>
       <p>TOTAL: ${numberFormat(total)} cases</>
-      <p>Recovered: ${numberFormat(
-          totalRecovered
-      )} cases - ${percentRecovered}%</p>
     `;
         })
         .on("mouseout", d => {
@@ -153,12 +141,18 @@ async function createDailyBarChart() {
             ) {
                 barElement.removeChild(barElement.lastElementChild);
             }
+            // TODO IF d.data.name which is a date string
+            // >= 22/3/2020, show world map
             let dailyDonutSvg = await createDailyDonutChart(d.data.name);
-            console.log("donutsvg:", dailyDonutSvg);
             barElement.appendChild(dailyDonutSvg);
         });
 
     // RECOVERED LINE
+    // DEATHS LINE
+    let deaths = data.map(d => ({
+        date: new Date(d.reportDate),
+        value: d.deaths.total,
+    }));
     let line = d3
         .line()
         .defined(d => !isNaN(d.value))
@@ -166,9 +160,9 @@ async function createDailyBarChart() {
         .y(d => yScale(d.value));
 
     svg.append("path")
-        .datum(recovered)
+        .datum(deaths)
         .attr("fill", "none")
-        .attr("stroke", "chartreuse")
+        .attr("stroke", "crimson")
         .attr("stroke-width", 1.5)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
@@ -184,7 +178,7 @@ async function createDailyBarChart() {
 
     legend
         .selectAll("rect")
-        .data(colorScheme.slice(0, series.length).concat("#7fff00"))
+        .data(colorScheme.slice(0, series.length).concat("#dc143c"))
         .join("rect")
         .attr("x", (d, i) => i * 50)
         .attr("y", 0)
@@ -194,7 +188,7 @@ async function createDailyBarChart() {
 
     legend
         .selectAll("text")
-        .data(keys.concat("recovered"))
+        .data(keys.concat("deaths"))
         .join("text")
         .attr("x", (d, i) => i * 50)
         .attr("y", 45)
@@ -226,18 +220,18 @@ async function createDailyDonutChart(dateString) {
     } else {
         raw = await fetchData(baseURL, `daily/${dateQuery}`);
         localStorage.setItem(dateString, JSON.stringify(raw));
-        console.log("sukses", dateString);
     }
-
+    
     if (raw.length === 0) {
         svg.append("text")
-            .attr("dx", 50)
-            .attr("dy", 50)
-            .attr("font-size", 16)
-            .text(`No data for this day yet ${dateString}.`);
+        .attr("dx", 50)
+        .attr("dy", 50)
+        .attr("font-size", 16)
+        .text(`No data for this day yet ${dateString}.`);
         return svg.node();
     }
     let data = changeDataToDonutData(dateString, raw);
+    console.log("sukses", data);
 
     // SUNBURST
     let arc = d3
@@ -471,17 +465,17 @@ async function createCountryDonut(countryISO3) {
 
 async function createIndonesiaData() {
     // get the data
-    let rawData = await fetch('https://jakarta.mathdro.id/api').then(d => d.json());
-    let data = Object.keys(rawData.data.nasional)
-        .slice(0, -2)
+    let rawData = await fetch('https://indonesia-covid-19.mathdro.id/api').then(d => d.json());
+    let data = Object.keys(rawData)
+        .slice(0, 3)
         .map(d => {
             return {
                 name: d,
-                value: rawData.data.nasional[d],
+                value: rawData[d],
             };
         });
+    data = data.reverse();
     data.columns = ["name", "value"];
-    console.log(rawData);
 
     // DONUT
     createDonut(data, idnElement, new Date());
